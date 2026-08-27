@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Магічна математика: Дії з від'ємними числами (6 клас)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fff9f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(255, 107, 0, 0.15);
+            border: 2px solid #ff6b00;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .badge {
+            display: inline-block;
+            background: #ffe6d5;
+            color: #ff6b00;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .global-timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d35400;
+            margin-bottom: 1rem;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #ffe6d5;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #ff6b00;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        .question {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+        .option-btn {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            border: 2px solid #ffb88c;
+            padding: 14px 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            background-color: #ffe6d5;
+            border-color: #ff6b00;
+        }
+        .option-btn.correct-choice {
+            background-color: #27ae60 !important;
+            color: white !important;
+            border-color: #27ae60 !important;
+        }
+        .option-btn.wrong-choice {
+            background-color: #e74c3c !important;
+            color: white !important;
+            border-color: #e74c3c !important;
+        }
+        .btn-next {
+            background-color: #27ae60 !important;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-next:hover {
+            background-color: #219150 !important;
+        }
+        .explanation-box {
+            margin-top: 1rem;
+            text-align: left;
+            background: #fff0f0;
+            border-left: 4px solid #e74c3c;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #2c3e50;
+        }
+        .explanation-title {
+            font-weight: bold;
+            color: #c0392b;
+            margin-bottom: 4px;
+        }
+        .feedback {
+            margin-top: 0.5rem;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        .correct { color: #27ae60; }
+        .stats {
+            margin-top: 1rem;
+            text-align: left;
+            background: #fff3eb;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .record-badge {
+            color: #d35400;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="badge">6 КЛАС • РАЦІОНАЛЬНІ ЧИСЛА</div>
+    <h2 style="color:#ff6b00; margin: 0 0 0.2rem 0;">Магічна математика</h2>
+    <div class="global-timer" id="global-timer">Час гри: 60 сек</div>
+    
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="pbar"></div>
+    </div>
+
+    <div id="game-area">
+        <div class="question" id="question">--</div>
+        
+        <div class="options-grid" id="options-container">
+            <!-- Кнопки відповідей -->
+        </div>
+
+        <div id="explanation-container"></div>
+        <div id="action-btn-container"></div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+        <button onclick="startQuiz()" style="background-color: #7f8c8d; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Перезапустити</button>
+    </div>
+</div>
+
+<script>
+    // База завдань для 6 класу: Додавання, Віднімання, Множення, Ділення
+    const dataset = [
+        // 1. Додавання
+        { 
+            q: "-7 + 4", 
+            correct: "-3", 
+            wrong: ["3", "-11", "11"],
+            rule: "<b>Різні знаки:</b> від більшого модуля віднімаємо менший (7 - 4 = 3) і ставимо знак більшого за модулем числа (знак мінус)."
+        },
+        { 
+            q: "-5 + (-8)", 
+            correct: "-13", 
+            wrong: ["13", "-3", "3"],
+            rule: "<b>Однакові знаки (мінус і мінус):</b> додаємо модулі (5 + 8 = 13) та зберігаємо спільний знак <b>мінус</b>."
+        },
+        { 
+            q: "-12 + 15", 
+            correct: "3", 
+            wrong: ["-3", "-27", "27"],
+            rule: "<b>Різні знаки:</b> 15 - 12 = 3. Число 15 має знак «плюс», тому відповідь <b>+3</b>."
+        },
+
+        // 2. Віднімання
+        { 
+            q: "6 - 10", 
+            correct: "-4", 
+            wrong: ["4", "-16", "16"],
+            rule: "Віднімання замінюємо додаванням: 6 + (-10). Оскільки |-10| більший, отримуємо <b>-4</b>."
+        },
+        { 
+            q: "-4 - 9", 
+            correct: "-13", 
+            wrong: ["5", "-5", "13"],
+            rule: "Замінюємо на суму двох від'ємних: -4 + (-9). Складаємо модулі (4 + 9) і ставимо мінус: <b>-13</b>."
+        },
+        { 
+            q: "-3 - (-7)", 
+            correct: "4", 
+            wrong: ["-10", "10", "-4"],
+            rule: "Два мінуси поспіль дають плюс: -3 - (-7) = -3 + 7 = <b>4</b>."
+        },
+
+        // 3. Множення
+        { 
+            q: "-6 · 5", 
+            correct: "-30", 
+            wrong: ["30", "-11", "1", "11"],
+            rule: "Множення чисел з <b>різними знаками</b> завжди дає <b>мінус</b>: (-) · (+) = (-)."
+        },
+        { 
+            q: "-8 · (-4)", 
+            correct: "32", 
+            wrong: ["-32", "-12", "12", "-36"],
+            rule: "Множення двох <b>від'ємних чисел</b> дає <b>плюс</b>: (-) · (-) = (+). 8 · 4 = 32."
+        },
+        { 
+            q: "7 · (-3)", 
+            correct: "-21", 
+            wrong: ["21", "-4", "4", "-10"],
+            rule: "(+) · (-) = (-). Множимо 7 на 3 і ставимо знак мінус: <b>-21</b>."
+        },
+
+        // 4. Ділення
+        { 
+            q: "-24 : 6", 
+            correct: "-4", 
+            wrong: ["4", "-18", "18", "-30"],
+            rule: "Ділення чисел з <b>різними знаками</b> дає <b>мінус</b>: (-) : (+) = (-). 24 : 6 = 4, тому <b>-4</b>."
+        },
+        { 
+            q: "-36 : (-9)", 
+            correct: "4", 
+            wrong: ["-4", "-27", "27", "-45"],
+            rule: "Ділення двох <b>від'ємних чисел</b> дає <b>плюс</b>: (-) : (-) = (+). 36 : 9 = <b>4</b>."
+        },
+        { 
+            q: "40 : (-5)", 
+            correct: "-8", 
+            wrong: ["8", "-35", "35", "-80"],
+            rule: "(+) : (-) = (-). 40 поділити на 5 буде 8, додаємо мінус: <b>-8</b>."
+        }
+    ];
+
+    const QUESTION_TIME = 10; // 10 секунд на обдумання
+    const GAME_TIME = 60;      // 60 секунд забігу
+
+    let queue = [];
+    let currentItem = null;
+    let correctCount = 0;
+    
+    let globalTimerId = null;
+    let questionTimerId = null;
+    let secondsLeft = GAME_TIME;
+    let questionTimeLeft = QUESTION_TIME;
+    
+    let isGameActive = false;
+    let isPausedForError = false;
+
+    const questionEl = document.getElementById("question");
+    const optionsContainer = document.getElementById("options-container");
+    const explanationContainer = document.getElementById("explanation-container");
+    const feedbackEl = document.getElementById("feedback");
+    const pbarEl = document.getElementById("pbar");
+    const globalTimerEl = document.getElementById("global-timer");
+    const actionBtnContainer = document.getElementById("action-btn-container");
+
+    function startQuiz() {
+        queue = [...dataset].sort(() => Math.random() - 0.5);
+        correctCount = 0;
+        secondsLeft = GAME_TIME;
+        isGameActive = true;
+        isPausedForError = false;
+        
+        globalTimerEl.textContent = `Час гри: ${secondsLeft} сек`;
+
+        stopAllTimers();
+        globalTimerId = setInterval(updateGlobalTimer, 1000);
+        
+        nextQuestion();
+    }
+
+    function stopAllTimers() {
+        if (globalTimerId) clearInterval(globalTimerId);
+        if (questionTimerId) clearInterval(questionTimerId);
+    }
+
+    function updateGlobalTimer() {
+        if (isPausedForError) return;
+
+        secondsLeft--;
+        globalTimerEl.textContent = `Час гри: ${secondsLeft} сек`;
+        if (secondsLeft <= 0) {
+            endGame();
+        }
+    }
+
+    function startQuestionTimer() {
+        if (questionTimerId) clearInterval(questionTimerId);
+        questionTimeLeft = QUESTION_TIME;
+        updatePbar();
+
+        questionTimerId = setInterval(() => {
+            if (isPausedForError) return;
+
+            questionTimeLeft -= 0.1;
+            updatePbar();
+            if (questionTimeLeft <= 0) {
+                clearInterval(questionTimerId);
+                handleQuestionTimeout();
+            }
+        }, 100);
+    }
+
+    function updatePbar() {
+        const pct = (questionTimeLeft / QUESTION_TIME) * 100;
+        pbarEl.style.width = Math.max(0, pct) + "%";
+    }
+
+    function nextQuestion() {
+        if (!isGameActive) return;
+
+        if (queue.length === 0) {
+            queue = [...dataset].sort(() => Math.random() - 0.5);
+        }
+
+        isPausedForError = false;
+        currentItem = queue.pop();
+        questionEl.textContent = currentItem.q + " = ?";
+        feedbackEl.textContent = "";
+        explanationContainer.innerHTML = "";
+        actionBtnContainer.innerHTML = "";
+
+        const allOptions = [currentItem.correct, ...currentItem.wrong].sort(() => Math.random() - 0.5);
+        
+        optionsContainer.innerHTML = "";
+        allOptions.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.textContent = opt;
+            btn.onclick = () => selectOption(btn, opt);
+            optionsContainer.appendChild(btn);
+        });
+
+        startQuestionTimer();
+    }
+
+    function selectOption(selectedBtn, selectedValue) {
+        if (!isGameActive || isPausedForError) return;
+        clearInterval(questionTimerId);
+
+        const buttons = optionsContainer.querySelectorAll(".option-btn");
+        buttons.forEach(btn => btn.onclick = null);
+
+        if (selectedValue === currentItem.correct) {
+            selectedBtn.classList.add("correct-choice");
+            correctCount++;
+            feedbackEl.textContent = "Чудово! ⚡";
+            feedbackEl.className = "feedback correct";
+            setTimeout(nextQuestion, 500);
+        } else {
+            selectedBtn.classList.add("wrong-choice");
+            highlightCorrectOption();
+            showDetailedExplanation("Увага, помилка!");
+        }
+    }
+
+    function highlightCorrectOption() {
+        const buttons = optionsContainer.querySelectorAll(".option-btn");
+        buttons.forEach(btn => {
+            if (btn.textContent === currentItem.correct) {
+                btn.classList.add("correct-choice");
+            }
+        });
+    }
+
+    function handleQuestionTimeout() {
+        if (!isGameActive || isPausedForError) return;
+        
+        const buttons = optionsContainer.querySelectorAll(".option-btn");
+        buttons.forEach(btn => btn.onclick = null);
+        highlightCorrectOption();
+
+        showDetailedExplanation("Час вийшов!");
+    }
+
+    function showDetailedExplanation(reasonTitle) {
+        isPausedForError = true;
+        clearInterval(questionTimerId);
+
+        explanationContainer.innerHTML = `
+            <div class="explanation-box">
+                <div class="explanation-title">💡 ${reasonTitle}</div>
+                <div>Правильно: <b>${currentItem.q} = ${currentItem.correct}</b></div>
+                <div style="margin-top: 6px; font-size: 0.9rem;">${currentItem.rule}</div>
+            </div>
+        `;
+
+        // Завдання повертається в чергу для повторного відпрацювання
+        queue.unshift(currentItem);
+
+        actionBtnContainer.innerHTML = `<button class="btn-next" onclick="resumeGame()">Зрозуміло, далі ➔</button>`;
+        
+        setTimeout(() => {
+            const nextBtn = document.querySelector('.btn-next');
+            if (nextBtn) nextBtn.focus();
+        }, 50);
+    }
+
+    function resumeGame() {
+        if (!isGameActive) return;
+        nextQuestion();
+    }
+
+    function endGame() {
+        isGameActive = false;
+        isPausedForError = false;
+        stopAllTimers();
+
+        questionEl.textContent = "Час вичерпано!";
+        optionsContainer.innerHTML = "";
+        explanationContainer.innerHTML = "";
+        pbarEl.style.width = "0%";
+        globalTimerEl.textContent = "Завершено!";
+
+        let bestRecord = localStorage.getItem("math_6kl_signs_best") || 0;
+        let isNewRecord = false;
+
+        if (correctCount > bestRecord) {
+            bestRecord = correctCount;
+            localStorage.setItem("math_6kl_signs_best", bestRecord);
+            isNewRecord = true;
+        }
+
+        actionBtnContainer.innerHTML = "";
+
+        feedbackEl.className = "feedback";
+        feedbackEl.innerHTML = `
+            <div class="stats">
+                <strong>Підсумок за 1 хвилину:</strong><br>
+                • Правильних відповідей: <strong>${correctCount}</strong><br>
+                • Особистий рекорд: <span class="record-badge">${bestRecord}</span> ${isNewRecord ? "🎉 (Новий рекорд!)" : ""}<br><br>
+                💡 Всі вирази з помилками повернулися в чергу та були розібрані за правилами!
+            </div>
+        `;
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if ((e.key === "Enter" || e.key === " ") && isPausedForError) {
+            e.preventDefault();
+            resumeGame();
+        }
+    });
+
+    startQuiz();
+</script>
+</body>
+</html>
